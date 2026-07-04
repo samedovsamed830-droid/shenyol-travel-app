@@ -44,6 +44,7 @@ export default function RootLayout({
     >
       <head>
         <meta name="google-site-verification" content="b6d2dcbbe2d43f96" />
+        <meta name="x-redeploy-trigger" content="2026-07-05" />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
