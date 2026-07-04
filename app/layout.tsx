@@ -17,6 +17,7 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: 'Shenyol Travel',
   description: 'Turlar və Səyahətlər',
+  other: { 'google-site-verification': 'b6d2dcbbe2d43f96' },
   icons: {
     icon: '/app-logo.png',
     apple: '/app-logo.png',
@@ -42,10 +43,6 @@ export default function RootLayout({
       lang="az"
       className={`light ${geistSans.variable} ${geistMono.variable} ${sora.variable} bg-background`}
     >
-      <head>
-        <meta name="google-site-verification" content="b6d2dcbbe2d43f96" />
-        <meta name="x-redeploy-trigger" content="2026-07-05" />
-      </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
         {process.env.NODE_ENV === 'production' && process.env.VERCEL === '1' && <Analytics />}
