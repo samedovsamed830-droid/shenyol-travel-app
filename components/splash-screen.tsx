@@ -95,14 +95,6 @@ export function SplashScreen({ onEnter }: { onEnter: () => void }) {
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="pointer-events-auto w-full max-w-md">
-          <button
-            type="button"
-            onClick={handleEnter}
-            className="mb-3 hidden w-full rounded-2xl border border-white/20 bg-black/45 px-4 py-3 text-sm font-semibold text-white/90 backdrop-blur md:block"
-          >
-            {t('splash.enter')}
-          </button>
-
           <div
             ref={trackRef}
             className="relative h-16 w-full overflow-hidden rounded-2xl border border-white/25 bg-gradient-to-r from-fuchsia-500/95 via-violet-500/95 to-indigo-500/95 p-1 shadow-[0_18px_50px_-18px_rgba(168,85,247,0.95)]"
