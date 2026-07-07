@@ -1,57 +1,36 @@
-import { cert, getApps, initializeApp, type App } from 'firebase-admin/app'
-import { getAuth, type Auth } from 'firebase-admin/auth'
-import { getFirestore, type Firestore } from 'firebase-admin/firestore'
+import * as admin from 'firebase-admin';
 
-const projectId = process.env.FIREBASE_PROJECT_ID?.trim()
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim()
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+// Əgər admin artıq initialize olunubsa, onu qaytar
+const app = !admin.apps.length 
+  ? admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID?.trim(),
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL?.trim(),
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    })
+  : admin.app();
 
-const isFirebaseAdminConfigured = Boolean(projectId && clientEmail && privateKey)
+export const adminAuth = admin.auth(app);
+export const adminDb = admin.firestore(app);
+export const isFirebaseAdminConfigured = Boolean(
+  process.env.FIREBASE_PROJECT_ID && 
+  process.env.FIREBASE_CLIENT_EMAIL && 
+  process.env.FIREBASE_PRIVATE_KEY
+);
 
-const adminApp: App | null = isFirebaseAdminConfigured
-  ? getApps().length
-    ? getApps()[0]
-    : initializeApp(
-        cert({
-          projectId: projectId!,
-          clientEmail: clientEmail!,
-          privateKey: privateKey!,
-        }),
-      )
-  : null
-
-const adminAuth: Auth | null = adminApp ? getAuth(adminApp) : null
-const adminDb: Firestore | null = adminApp ? getFirestore(adminApp) : null
-
-const parseAdminEmails = () =>
-  String(process.env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean)
-
+// Sənin digər funksiyaların (isAdminSession və s.) burada qalsın...
 export async function isAdminSession(sessionCookie: string): Promise<boolean> {
-  if (!adminAuth) {
-    return false
-  }
-
   try {
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true)
-    const email = String(decoded.email ?? '').toLowerCase()
-    const allowlist = parseAdminEmails()
-    return decoded.admin === true || (email ? allowlist.includes(email) : false)
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const email = String(decoded.email ?? '').toLowerCase();
+    const allowlist = String(process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase());
+    return decoded.admin === true || (email ? allowlist.includes(email) : false);
   } catch {
-    return false
+    return false;
   }
 }
 
 export async function createAdminSessionCookie(idToken: string): Promise<string> {
-  if (!adminAuth) {
-    throw new Error('Server-side Firebase Admin environment variables are missing.')
-  }
-
-  return adminAuth.createSessionCookie(idToken, {
-    expiresIn: 60 * 60 * 24 * 5 * 1000,
-  })
+  return adminAuth.createSessionCookie(idToken, { expiresIn: 60 * 60 * 24 * 5 * 1000 });
 }
-
-export { adminDb, isFirebaseAdminConfigured }
