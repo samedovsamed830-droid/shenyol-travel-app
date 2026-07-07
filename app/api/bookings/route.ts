@@ -1,6 +1,6 @@
 import { FieldValue } from 'firebase-admin/firestore'
 import { NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase-admin'
+import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin'
 
 export const runtime = 'nodejs'
 
@@ -29,14 +29,9 @@ type IncomingBooking = {
   userEmail?: unknown
 }
 
-const isConfigured =
-  Boolean(process.env.FIREBASE_PROJECT_ID) &&
-  Boolean(process.env.FIREBASE_CLIENT_EMAIL) &&
-  Boolean(process.env.FIREBASE_PRIVATE_KEY)
-
 export async function POST(request: Request) {
   try {
-    if (!isConfigured) {
+    if (!isFirebaseAdminConfigured || !adminDb) {
       return NextResponse.json(
         {
           ok: false,

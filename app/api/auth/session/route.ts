@@ -1,17 +1,12 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createAdminSessionCookie } from '@/lib/firebase-admin'
+import { createAdminSessionCookie, isFirebaseAdminConfigured } from '@/lib/firebase-admin'
 
 const SESSION_COOKIE_NAME = '__session'
 
 export async function POST(request: Request) {
   try {
-    const hasAdminEnv =
-      Boolean(process.env.FIREBASE_PROJECT_ID) &&
-      Boolean(process.env.FIREBASE_CLIENT_EMAIL) &&
-      Boolean(process.env.FIREBASE_PRIVATE_KEY)
-
-    if (!hasAdminEnv) {
+    if (!isFirebaseAdminConfigured) {
       return NextResponse.json(
         {
           ok: false,

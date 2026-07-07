@@ -1,6 +1,6 @@
-import { getApp, getApps, initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore, initializeFirestore, setLogLevel } from 'firebase/firestore'
+import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app'
+import { getAuth, indexedDBLocalPersistence, initializeAuth, type Auth } from 'firebase/auth'
+import { getFirestore, initializeFirestore, setLogLevel, type Firestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -24,22 +24,33 @@ const isFirebaseConfigured = missingFirebaseKeys.length === 0
 
 if (!isFirebaseConfigured && typeof window !== 'undefined') {
   console.warn(
-    `[Firebase] Missing environment variables: ${missingFirebaseKeys
-      .map((key) => `NEXT_PUBLIC_FIREBASE_${key.replace(/[A-Z]/g, (letter) => `_${letter}`).toUpperCase()}`)
-      .join(', ')}`,
+    `[Firebase] Missing environment variables: ${missingFirebaseKeys.map((key) => `NEXT_PUBLIC_FIREBASE_${key.toUpperCase()}`).join(', ')}`,
   )
 }
 
-const app = isFirebaseConfigured
-  ? getApps().length
-    ? getApp()
-    : initializeApp(firebaseConfig)
+const app: FirebaseApp | null = isFirebaseConfigured
+  ? !getApps().length
+    ? initializeApp(firebaseConfig)
+    : getApp()
   : null
 
-const db = (() => {
+const auth: Auth | null = (() => {
+  if (!app || typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    return initializeAuth(app, {
+      persistence: indexedDBLocalPersistence,
+    })
+  } catch {
+    return getAuth(app)
+  }
+})()
+
+const db: Firestore | null = (() => {
   if (!app) return null
 
-  // Suppress verbose transport warnings during temporary network changes.
   setLogLevel('error')
 
   try {
@@ -50,6 +61,5 @@ const db = (() => {
     return getFirestore(app)
   }
 })()
-const auth = app ? getAuth(app) : null
 
 export { app, auth, db, firebaseConfig, isFirebaseConfigured }
